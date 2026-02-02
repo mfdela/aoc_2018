@@ -1,6 +1,6 @@
-# Aoc2025
+# Aoc2018
 
-This is a project to solve the Advent of Code 2025 puzzles in [Elixir](https://elixir-lang.org/).
+This is a project to solve the Advent of Code 2018 puzzles in [Elixir](https://elixir-lang.org/).
 
 The scaffolding for the project is heavily lifted from [advent-generator](https://github.com/ChristianAlexander/advent-generator)
 and uses [Igniter](https://github.com/ash-project/igniter) to generate each day project files and downloading input files.

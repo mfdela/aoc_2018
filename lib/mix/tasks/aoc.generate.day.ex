@@ -26,16 +26,14 @@ defmodule Mix.Tasks.Aoc.Generate.Day do
     }
   end
 
-  def igniter(igniter, argv) do
-    {arguments, _argv} = positional_args!(argv)
-
-    day = advent_day(Map.get(arguments, :day))
+  def igniter(igniter) do
+    day = advent_day(igniter.args.positional[:day])
     year = advent_year()
 
     full_day_number = String.pad_leading(to_string(day), 2, "0")
 
-    day_module_name = Igniter.Code.Module.parse("Aoc.Day#{full_day_number}")
-    test_module_name = Igniter.Code.Module.parse("Aoc.Day#{full_day_number}Test")
+    day_module_name = Igniter.Project.Module.parse("Aoc.Day#{full_day_number}")
+    test_module_name = Igniter.Project.Module.parse("Aoc.Day#{full_day_number}Test")
 
     igniter
     |> Igniter.assign(
@@ -44,7 +42,7 @@ defmodule Mix.Tasks.Aoc.Generate.Day do
       day: day,
       year: year
     )
-    |> Igniter.Code.Module.create_module(day_module_name, """
+    |> Igniter.Project.Module.create_module(day_module_name, """
       def part1(args) do
         args
       end
@@ -55,7 +53,7 @@ defmodule Mix.Tasks.Aoc.Generate.Day do
     """)
     |> add_mix_task(1)
     |> add_mix_task(2)
-    |> Igniter.Code.Module.create_module(
+    |> Igniter.Project.Module.create_module(
       test_module_name,
       """
         use ExUnit.Case
@@ -89,7 +87,7 @@ defmodule Mix.Tasks.Aoc.Generate.Day do
     template_path = Path.expand("templates/day_mix_task.eex")
 
     part_module_name =
-      Igniter.Code.Module.parse("Mix.Tasks.D#{igniter.assigns[:full_day_number]}.P#{part}")
+      Igniter.Project.Module.parse("Mix.Tasks.D#{igniter.assigns[:full_day_number]}.P#{part}")
 
     assigns =
       Keyword.merge(
@@ -123,6 +121,6 @@ defmodule Mix.Tasks.Aoc.Generate.Day do
 
   defp advent_year() do
     config = Application.get_env(:aoc, :input)
-    Keyword.get(config, :year, 2025)
+    Keyword.get(config, :year, 2018)
   end
 end
