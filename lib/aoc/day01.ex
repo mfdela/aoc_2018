@@ -6,9 +6,8 @@ defmodule Aoc.Day01 do
   end
 
   def part2(args) do
-    changes = parse_input(args)
-
-    changes
+    args
+    |> parse_input()
     |> Stream.cycle()
     |> Enum.reduce_while({0, MapSet.new([0])}, fn change, {freq, seen} ->
       new_freq = freq + change
