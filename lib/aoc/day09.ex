@@ -1,14 +1,12 @@
 defmodule Aoc.Day09 do
   def part1(args) do
-    [players, last_marble] =
-      args
-      |> parse_input()
-
-    elf_turns(players, last_marble)
+    [players, last_marble] = parse_input(args)
+    play_game(players, last_marble)
   end
 
   def part2(args) do
-    args
+    [players, last_marble] = parse_input(args)
+    play_game(players, last_marble * 100)
   end
 
   def parse_input(input) do
@@ -18,85 +16,57 @@ defmodule Aoc.Day09 do
     |> Enum.map(&String.to_integer/1)
   end
 
-  def elf_turns(players, last_marble) do
-    # Use a zipper: {before (reversed), current, after}
-    initial_circle = {[], 0, []}
+  def play_game(players, last_marble) do
+    # Map-based circular doubly-linked list
+    # Each marble maps to {prev, next}
+    # Start with marble 0 pointing to itself
+    initial_circle = %{0 => {0, 0}}
     initial_scores = Map.new(0..(players - 1), fn p -> {p, 0} end)
 
-    {_circle, scores} =
-      Enum.reduce(1..last_marble, {initial_circle, initial_scores}, fn marble, {circle, scores} ->
+    {_circle, _current, scores} =
+      Enum.reduce(1..last_marble, {initial_circle, 0, initial_scores}, fn marble, {circle, current, scores} ->
         player = rem(marble - 1, players)
 
         if rem(marble, 23) == 0 do
-          # Special case
-          {new_circle, removed} = remove_7_ccw(circle)
-          new_score = scores[player] + marble + removed
-          {new_circle, Map.put(scores, player, new_score)}
+          # Move 7 counter-clockwise and remove
+          target = move_ccw(circle, current, 7)
+          {prev, next} = circle[target]
+
+          # Remove target from circle
+          new_circle =
+            circle
+            |> Map.delete(target)
+            |> Map.update!(prev, fn {pp, _} -> {pp, next} end)
+            |> Map.update!(next, fn {_, nn} -> {prev, nn} end)
+
+          # Update score
+          new_score = scores[player] + marble + target
+          new_scores = Map.put(scores, player, new_score)
+
+          {new_circle, next, new_scores}
         else
-          # Normal: move 1 clockwise, then insert after current
-          circle_moved = move_cw(circle)
-          {insert_after(circle_moved, marble), scores}
+          # Move 1 clockwise, insert after
+          {_, next1} = circle[current]
+          {_, next2} = circle[next1]
+
+          # Insert marble between next1 and next2
+          new_circle =
+            circle
+            |> Map.put(marble, {next1, next2})
+            |> Map.update!(next1, fn {p, _} -> {p, marble} end)
+            |> Map.update!(next2, fn {_, n} -> {marble, n} end)
+
+          {new_circle, marble, scores}
         end
       end)
 
     scores |> Map.values() |> Enum.max()
   end
 
-  # Move 1 position clockwise: current moves to before, first of after becomes current
-  def move_cw({before, current, []}) do
-    # Wrap around: reverse before and current into after
-    [first | rest] = Enum.reverse([current | before])
-    {[], first, rest}
-  end
-
-  def move_cw({before, current, [next | after_]}) do
-    {[current | before], next, after_}
-  end
-
-  # Insert after current position (new value becomes current)
-  def insert_after({before, current, after_}, value) do
-    {[current | before], value, after_}
-  end
-
-  # Remove 7 positions counter-clockwise
-  def remove_7_ccw(circle) do
-    # Move 7 times counter-clockwise
-    circle7 =
-      circle
-      |> move_ccw()
-      |> move_ccw()
-      |> move_ccw()
-      |> move_ccw()
-      |> move_ccw()
-      |> move_ccw()
-      |> move_ccw()
-
-    {before, current, after_} = circle7
-    removed = current
-
-    # Next element clockwise becomes current
-    new_circle =
-      case after_ do
-        [next | rest] ->
-          {before, next, rest}
-
-        [] ->
-          # Wrap around
-          [first | rest] = Enum.reverse(before)
-          {[], first, rest}
-      end
-
-    {new_circle, removed}
-  end
-
-  # Move 1 position counter-clockwise: first of before becomes current, current moves to after
-  def move_ccw({[], current, after_}) do
-    # Wrap around: reverse after and current into before
-    [last | rest] = Enum.reverse([current | after_])
-    {rest, last, []}
-  end
-
-  def move_ccw({[prev | before], current, after_}) do
-    {before, prev, [current | after_]}
+  # Move N positions counter-clockwise
+  def move_ccw(_circle, current, 0), do: current
+  def move_ccw(circle, current, n) do
+    {prev, _} = circle[current]
+    move_ccw(circle, prev, n - 1)
   end
 end
