@@ -40,7 +40,7 @@ defmodule Aoc.Day20 do
     {width, height, total_rooms, total_doors}
   end
 
-  defp build_door_map(regex) do
+  def build_door_map(regex) do
     # Remove ^ and $
     regex = regex |> String.slice(1..-2//1)
 
@@ -49,7 +49,7 @@ defmodule Aoc.Day20 do
     doors
   end
 
-  defp print_map_dimensions(doors) do
+  def print_map_dimensions(doors) do
     # Get all unique rooms from the doors
     rooms =
       doors
@@ -71,15 +71,15 @@ defmodule Aoc.Day20 do
     IO.puts("  Total doors: #{total_doors}")
   end
 
-  defp parse(regex, pos, doors, stack) do
+  def parse(regex, pos, doors, stack) do
     parse_chars(String.graphemes(regex), pos, doors, stack)
   end
 
-  defp parse_chars([], pos, doors, _stack) do
+  def parse_chars([], pos, doors, _stack) do
     {doors, pos}
   end
 
-  defp parse_chars([char | rest], pos, doors, stack) do
+  def parse_chars([char | rest], pos, doors, stack) do
     case char do
       "N" ->
         {x, y} = pos
@@ -124,7 +124,7 @@ defmodule Aoc.Day20 do
     end
   end
 
-  defp find_furthest_room(doors) do
+  def find_furthest_room(doors) do
     # BFS from starting position {0, 0}
     start = {0, 0}
     queue = :queue.from_list([{start, 0}])
@@ -133,7 +133,7 @@ defmodule Aoc.Day20 do
     bfs(queue, visited, doors, 0)
   end
 
-  defp count_rooms_at_least(doors, min_distance) do
+  def count_rooms_at_least(doors, min_distance) do
     # BFS from starting position {0, 0} and count rooms with distance >= min_distance
     start = {0, 0}
     queue = :queue.from_list([{start, 0}])
@@ -142,7 +142,7 @@ defmodule Aoc.Day20 do
     bfs_count(queue, visited, doors, min_distance, 0)
   end
 
-  defp bfs(queue, visited, doors, max_dist) do
+  def bfs(queue, visited, doors, max_dist) do
     case :queue.out(queue) do
       {{:value, {pos, dist}}, new_queue} ->
         new_max = max(max_dist, dist)
@@ -169,7 +169,7 @@ defmodule Aoc.Day20 do
     end
   end
 
-  defp bfs_count(queue, visited, doors, min_distance, count) do
+  def bfs_count(queue, visited, doors, min_distance, count) do
     case :queue.out(queue) do
       {{:value, {pos, dist}}, new_queue} ->
         # Increment count if distance is at least min_distance
@@ -197,7 +197,7 @@ defmodule Aoc.Day20 do
     end
   end
 
-  defp get_neighbors(pos, doors) do
+  def get_neighbors(pos, doors) do
     [{0, 1}, {0, -1}, {1, 0}, {-1, 0}]
     |> Enum.map(fn {dx, dy} ->
       {x, y} = pos
